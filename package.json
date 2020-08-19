@@ -1,6 +1,6 @@
 {
 	"name": "store-env",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"description": "Simple store for environment variables",
 	"license": "MIT",
 	"repository": "simonjang/store-env",
