@@ -1,0 +1,6 @@
+{
+	"extends": ["tslint-xo", "tslint-config-prettier"],
+	"rules": {
+		"typedef": false
+	}
+}
