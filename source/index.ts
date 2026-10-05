@@ -114,7 +114,9 @@ export function env<T>(
 				continue;
 			}
 
-			const value = map[prop];
+			const value = Object.prototype.hasOwnProperty.call(map, prop)
+				? map[prop]
+				: undefined;
 
 			if (value === undefined) {
 				delete (map as Partial<T>)[prop];

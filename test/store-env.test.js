@@ -116,3 +116,43 @@ test('does not expose inherited values for rejected prototype-named keys', () =>
 	);
 	assert.equal(store.get('toString'), 'fallback');
 });
+
+test('does not validate inherited values for missing prototype-named keys', () => {
+	for (const key of ['toString', 'constructor', 'hasOwnProperty', '__proto__']) {
+		for (const [defaults, expected] of [
+			[undefined, undefined],
+			[{OTHER: 'fallback'}, undefined],
+			[{[key]: 'fallback'}, 'fallback']
+		]) {
+			let validatorCalls = 0;
+			const store = env({}, {
+				defaults,
+				validators: {[key]: value => {
+					validatorCalls++;
+					return value.trim().length > 0;
+				}}
+			});
+
+			assert.equal(validatorCalls, 0);
+			assert.equal(store.get(key), expected);
+		}
+	}
+});
+
+test('validates own values for prototype-named keys', () => {
+	for (const key of ['toString', 'constructor', 'hasOwnProperty', '__proto__']) {
+		for (const [value, expected] of [['valid', 'valid'], ['', 'fallback']]) {
+			let validatorCalls = 0;
+			const store = env({[key]: value}, {
+				defaults: {[key]: 'fallback'},
+				validators: {[key]: candidate => {
+					validatorCalls++;
+					return candidate.trim().length > 0;
+				}}
+			});
+
+			assert.equal(validatorCalls, 1);
+			assert.equal(store.get(key), expected);
+		}
+	}
+});
