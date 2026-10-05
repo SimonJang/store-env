@@ -1,29 +1,48 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  main:
-    name: Test (Node ${{ matrix.node }})
+  test:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 5
     strategy:
       matrix:
-        node: [12, 13]
-
+        node-version: [22.x, 24.x, 26.x]
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v1
-
-      - name: Use Node ${{ matrix.node }}
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ matrix.node-version }}
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm test
+      - run: npm pack --dry-run
 
-      - name: Install NPM dependencies
-        run: npm ci
-
-      - name: Run unit tests
-        run: npm test
-        env:
-          CI: true
+  legacy-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22.x
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 12.x
+          package-manager-cache: false
+      - name: Smoke-test the declared runtime floor
+        run: >-
+          node -e "var store = require('./lib').env({NAME: '', RETRIES: 0}, {defaults: {NAME: 'fallback', RETRIES: 1}}); if (store.get('NAME') !== '' || store.get('RETRIES') !== 0) process.exit(1);"
