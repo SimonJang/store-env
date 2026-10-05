@@ -145,7 +145,9 @@ export function env<T>(
 			get: <P extends keyof T>(
 				key: P
 			): EnvValue<T, Options<T>, P> =>
-				envMap[key] as EnvValue<T, Options<T>, P>
+				(Object.prototype.hasOwnProperty.call(envMap, key)
+					? envMap[key]
+					: undefined) as EnvValue<T, Options<T>, P>
 		};
 	};
 

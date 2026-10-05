@@ -95,3 +95,24 @@ test('propagates validator errors', () => {
 		/invalid configuration/
 	);
 });
+
+test('does not expose inherited values for rejected prototype-named keys', () => {
+	for (const defaults of [undefined, {OTHER: 'fallback'}]) {
+		const store = env(
+			{toString: 'invalid', constructor: 'invalid'},
+			{
+				defaults,
+				validators: {toString: () => false, constructor: () => false}
+			}
+		);
+
+		assert.equal(store.get('toString'), undefined);
+		assert.equal(store.get('constructor'), undefined);
+	}
+
+	const store = env(
+		{toString: 'invalid'},
+		{defaults: {toString: 'fallback'}, validators: {toString: () => false}}
+	);
+	assert.equal(store.get('toString'), 'fallback');
+});
